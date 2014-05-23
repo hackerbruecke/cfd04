@@ -2,6 +2,88 @@
 #include "LBDefinitions.h"
 #include "computeCellValues.h"
 
+#if 1
+
+static inline int inBounds(int x, int y, int z, int xlength) {
+	return  x > 0 && x < xlength+1 && y > 0 && y < xlength+1 && z > 0 && z < xlength+1;
+}
+
+void treatBoundary(double *collideField, int* flagField,
+		const double * const wallVelocity, int xlength) {
+	int i, dx, dy, dz;
+	double *currentCell;
+
+	double finv = 0;
+
+	/*Going through the whole boundary domain*/
+
+	/*For each boundary cell/particle we update all the distribution functions,
+	 that point towards fluid, according to boundary conditions*/
+
+	for (int x = 0; x < xlength; ++x) {
+		for (int y = 0; y < xlength; ++y) {
+			for (i = 0; i < Q; ++i) {
+				/*dx = c_i_x*dt, dt = 1*/
+				dx = LATTICEVELOCITIES[i][0];
+				dy = LATTICEVELOCITIES[i][1];
+				dz = LATTICEVELOCITIES[i][2];
+
+				/*Checking if the i-th directions is facing the fluid particles*/
+				/*y-z plane*/
+				if (inBounds(x+dx, y+dy, z+dz, xlength+1) && flagField[fidx(xlength, x + dx, y + dy, z+dz)] == FLUID) {
+						finv = collideField[idx(xlength, x + dx, y + dy, z + dz, Q - i - 1)];
+						collideField[idx(xlength, x, y, z, i)] = finv;
+					}
+				}
+			}
+		}
+	}
+
+	for (int x = 0; x < xlength; ++x) {
+		for (int z = 0; z < xlength; ++z) {
+
+		}
+	}
+
+	for (int x = 0; x < xlength; ++x) {
+		for (int z = 0; z < xlength; ++x) {
+
+		}
+	}
+
+	for (int z = 0; z < xlength[2] + 2; ++z) {
+		for (int y = 0; y < xlength[1] + 2; ++y) {
+			for (int x = 0; x < xlength[0] + 2; ++x) {
+
+				/* Conditions for NO_SLIP */
+				if (flagField[fidx(xlength, x, y, z)] == NO_SLIP) {
+					for (i = 0; i < Q; ++i) {
+
+						dx = LATTICEVELOCITIES[i][0];
+						dy = LATTICEVELOCITIES[i][1];
+						dz = LATTICEVELOCITIES[i][2];
+
+						if (x + dx > 0 && x + dx < xlength + 1 && y + dy > 0
+								&& y + dy < xlength + 1 && z + dz > 0
+								&& z + dz < xlength + 1) {
+
+							/*Checking if the i-th direction is facing the fluid particles*/
+
+							if (flagField[fidx(xlength, x + dx, y + dy, z + dz)]
+									== FLUID) {
+
+								finv = collideField[idx(xlength, x + dx, y + dy,
+										z + dz, Q - i - 1)];
+								collideField[idx(xlength, x, y, z, i)] = finv;
+							}
+						}
+					}/* Conditions for OUTFLOW */
+				}
+			}
+		}
+	}
+}
+#else
 void treatBoundary(double *collideField, int* flagField,
 		const double * const wallVelocity, int xlength) {
 	int i, x, y, z, dx, dy, dz;
@@ -77,16 +159,4 @@ void treatBoundary(double *collideField, int* flagField,
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif
