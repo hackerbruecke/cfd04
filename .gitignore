@@ -4,3 +4,4 @@
 *.o
 lbsim
 *.vtk
+gmon.out
