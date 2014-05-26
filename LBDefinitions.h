@@ -1,9 +1,11 @@
 #ifndef _LBDEFINITIONS_H_
 #define _LBDEFINITIONS_H_
 
-#define Q 19
+/* Dimensions of D3Q19 model */
 #define D 3
+#define Q 19
 
+/* Three-dimensional lattice velocities (c_i) sorted by index i */
 static const int LATTICEVELOCITIES[19][3] =
 {
     {  0, -1, -1 }, { -1,  0, -1 }, {  0,  0, -1 }, {  1,  0, -1 }, {  0,  1, -1 },
@@ -11,27 +13,42 @@ static const int LATTICEVELOCITIES[19][3] =
     {  1,  0,  0 }, { -1,  1,  0 }, {  0,  1,  0 }, {  1,  1,  0 }, {  0, -1,  1 },
     { -1,  0,  1 }, {  0,  0,  1 }, {  1,  0,  1 }, {  0,  1,  1 }
 };
-static const double LATTICEWEIGHTS[19] = 
+
+/* Lattice weights sorted by directions c_i */
+static const double LATTICEWEIGHTS[19] =
 {
     1.0/36, 1.0/36, 2.0/36, 1.0/36, 1.0/36,
     1.0/36, 2.0/36, 1.0/36, 2.0/36, 12.0/36,
     2.0/36, 1.0/36, 2.0/36, 1.0/36, 1.0/36,
     1.0/36, 2.0/36, 1.0/36, 1.0/36
 };
+
+/* Speed of sound */
 static const double C_S = 0.57735026919l; 
 
-static const int FLUID = 0;
-static const int NO_SLIP = 1;
-static const int MOVING_WALL = 2;
+/* Type/State of lattice element */
+typedef enum {
+	FLUID = 0,
+	NO_SLIP = 1,
+	MOVING_WALL = 2
+} STATE;
 
+/*
+ * Cell index
+ */
 static inline int idx(int xlength, int x, int y, int z, int i) {
     return Q * (z * (xlength+2) * (xlength+2) + y * (xlength+2) + x) + i;
 }
-
+/*
+ * Flag index
+ */
 static inline int fidx(int xlength, int x, int y, int z) {
     return z * (xlength+2) * (xlength+2) + y * (xlength+2) + x;
 }
 
+/*
+ * Inverse index
+ */
 static inline int inv(int idx) {
     return 18 - idx;
 }
