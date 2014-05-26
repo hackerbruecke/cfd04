@@ -51,11 +51,13 @@ int main(int argc, char *argv[]) {
         
         /* Write output to vtk file for postprocessing */
 		if (t % timestepsPerPlotting == 0) {
+			printf("%d %%\r", (int)((double)t/timesteps*100));
+			fflush(stdout);
 			writeVtkOutput(collideField, flagField, "lbm_out", t, xlength);
 		}
 	}
 
-    printf("============================================================\n");
+    printf("Done!\n============================================================\n");
     printf("LBM simulation completed for %d cells and %d timesteps\n", xl_to3, timesteps);
     printf("Freeing allocated memory...\n");
     free(collideField);
@@ -65,4 +67,3 @@ int main(int argc, char *argv[]) {
 }
 
 #endif
-
