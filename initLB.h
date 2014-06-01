@@ -8,15 +8,28 @@ int readParameters(
     int *xlength,                       /* reads domain size. Parameter name: "xlength" */
     double *tau,                        /* relaxation parameter tau. Parameter name: "tau" */
     double *velocityWall,               /* velocity of the lid. Parameter name: "characteristicvelocity" */
+    int *iproc,
+    int *jproc,
+    int *kproc,
     int *timesteps,                     /* number of timesteps. Parameter name: "timesteps" */
     int *timestepsPerPlotting,          /* timesteps between subsequent VTK plots. Parameter name: "vtkoutput" */
     int argc,                           /* number of arguments. Should equal 2 (program + name of config file */
     char *argv[]                        /* argv[1] shall contain the path to the config file */
 );
 
+/* Broadcasts the values of the parameter list from rank 0 to MPI_COMM_WORLD.
+ * Use this function after reading in parameters from rank 0 */
+void broadcastInitialValues(
+	int *xlength,
+	double *tau,
+	double *velocityWall,
+	int *iproc,
+	int *jproc,
+	int *kproc,
+	int *timesteps);
 
 /* initialises the particle distribution functions and the flagfield */
-void initialiseFields(double *collideField, double *streamField,int *flagField, int xlength);
+void initialiseFields(double *collideField, double *streamField,int *flagField, int xl, int yl, int zl, int rank, int number_of_ranks);
 
 #endif
 

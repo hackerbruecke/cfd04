@@ -30,20 +30,21 @@ static const double C_S = 0.57735026919l;
 typedef enum {
 	FLUID = 0,
 	NO_SLIP = 1,
-	MOVING_WALL = 2
+	MOVING_WALL = 2,
+	PARALLEL_BOUNDARY
 } STATE;
 
 /*
  * Cell index
  */
-static inline int idx(int xlength, int x, int y, int z, int i) {
-    return Q * (z * (xlength+2) * (xlength+2) + y * (xlength+2) + x) + i;
+static inline int idx(const int * const xlength, int x, int y, int z, int i) {
+    return Q * (z * (xlength[1]+2) * (xlength[1]+2) + y * (xlength[0]+2) + x) + i;
 }
 /*
  * Flag index
  */
-static inline int fidx(int xlength, int x, int y, int z) {
-    return z * (xlength+2) * (xlength+2) + y * (xlength+2) + x;
+static inline int fidx(const int *const xlength, int x, int y, int z) {
+    return z * (xlength[1]+2) * (xlength[1]+2) + y * (xlength[0]+2) + x;
 }
 
 /*
