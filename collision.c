@@ -10,21 +10,23 @@ void computePostCollisionDistributions(double *currentCell, const double * const
     }
 }
 
-void doCollision(double *collideField, int *flagField,const double * const tau,int xlength){
+void doCollision(double *collideField, int *flagField,const double * const tau,int *xlength){
     double density;
     double velocity[D];
     double feq[Q];
     double *currentCell;
 
-    for (int z = 1; z < xlength + 1; ++z) {
-		for (int y = 1; y < xlength + 1; ++y) {
-			for (int x = 1; x < xlength + 1; ++x) {
-				currentCell = &collideField[idx(xlength, x, y, z, 0)];
-				/*Updating values for velocity, density and Feq for Current cell*/
-				computeDensity(currentCell, &density);
-				computeVelocity(currentCell, &density, velocity);
-				computeFeq(&density, velocity, feq);
-				computePostCollisionDistributions(currentCell, tau, feq);
+    for (int z = 0; z < xlength[2] + 2; ++z) {
+        for (int y = 0; y < xlength[1] + 2; ++y) {
+            for (int x = 0; x < xlength[0] + 2; ++x) {
+                currentCell = &collideField[idx(xlength, x, y, z, 0)];
+
+                /*Updating values for velocity, density and Feq for Current cell*/
+                computeDensity(currentCell, &density);
+                computeVelocity(currentCell, &density, velocity);
+                computeFeq(&density, velocity, feq);
+
+                computePostCollisionDistributions(currentCell, tau, feq);
             }
         }
     }

@@ -36,14 +36,14 @@ typedef enum {
 /*
  * Cell index
  */
-static inline int idx(int xlength, int x, int y, int z, int i) {
-    return Q * (z * (xlength+2) * (xlength+2) + y * (xlength+2) + x) + i;
+static inline int idx(int* xlength, int x, int y, int z, int i) {
+    return Q * (z * (xlength[0] + 2) * (xlength[1] + 2) + y * (xlength[0] + 2) + x) + i;
 }
 /*
  * Flag index
  */
-static inline int fidx(int xlength, int x, int y, int z) {
-    return z * (xlength+2) * (xlength+2) + y * (xlength+2) + x;
+static inline int fidx(int* xlength, int x, int y, int z) {
+    return z * (xlength[0] + 2) * (xlength[1] + 2) + y * (xlength[0] + 2) + x;
 }
 
 /*
