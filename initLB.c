@@ -40,31 +40,6 @@ void broadcastInitialValues(int *xlength, double *tau, double *velocityWall, int
     MPI_Bcast(timesteps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-#if 0 /* Maybe remove this later on */
-typedef enum
-{
-    NONE = 0x0, LEFT = 0x1, RIGHT = 0x2, TOP = 0x4, BOTTOM = 0x8, FRONT = 0x10, BACK = 0x20
-}BOUNDARY;
-
-int checkBoundary(int rank, int xlength)
-{
-    int result = NONE;
-    if (rank / (xlength * xlength) == 0)
-    result |= BOTTOM;
-    if (rank / (xlength * xlength) == xlength - 1)
-    result |= TOP;
-    if ((rank / xlength) % xlength == 0)
-    result |= FRONT;
-    if ((rank / xlength) % xlength == xlength - 1)
-    result |= BACK;
-    if (rank % xlength == 0)
-    result |= LEFT;
-    if (rank % xlength == xlength - 1)
-    result |= RIGHT;
-    return result;
-}
-#endif
-
 void initialiseFields(double *collideField, double *streamField, int *flagField, int xlength,
         const int * const sublength, int rank, int number_of_ranks)
 {

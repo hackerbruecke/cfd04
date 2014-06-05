@@ -5,12 +5,12 @@
 #include "computeCellValues.h"
 
 void writeVtkOutput(const double * const collideField, const int * const flagField,
-        const char * filename, unsigned int t, const int * const sublength)
+        const char * filename, int rank, int iproc, int jproc, int kproc, unsigned int t, const int * const sublength)
 {
     /* TODO: Replace by arb. geometry version */
     char fn[80];
     /* Save filename as a combination of passed filename and timestep */
-    sprintf(fn, "%s.%i.vtk", filename, t);
+    sprintf(fn, "%s_%d.%d.%d.%i.vtk", filename, rank%iproc, rank/iproc%jproc, rank/(iproc*jproc), t);
 
     FILE *fp = fopen(fn, "w");
     if (fp == NULL) {
@@ -23,7 +23,8 @@ void writeVtkOutput(const double * const collideField, const int * const flagFie
     fprintf(fp, "ASCII\n\n");
     fprintf(fp, "DATASET STRUCTURED_GRID\n");
     fprintf(fp, "DIMENSIONS %d %d %d \n", sublength[0] + 1, sublength[1] + 1, sublength[2] + 1);
-    fprintf(fp, "POINTS %d float\n\n", (sublength[0] + 1) * (sublength[1] + 1) * (sublength[2] + 1));
+    fprintf(fp, "POINTS %d float\n\n",
+            (sublength[0] + 1) * (sublength[1] + 1) * (sublength[2] + 1));
 
     /* Print lattice points */
     for (int z = 1; z < sublength[2] + 2; ++z) {

@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
     /* Subdivision of each domain dimension */
     int iproc, jproc, kproc;
     /* Send and receive buffer for exchanging PDFs among processes */
-    double *sendBuffer[6];
-    double *readBuffer[6];
+    double sendBuffer[6];
+    double readBuffer[6];
 
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
@@ -55,35 +55,42 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
         printf("...done\n");
-        if (iproc * jproc * kproc != number_of_ranks) {
-            printf("iproc*jproc*kproc != number of ranks! Aborting program!\n");
-            fflush(stdout);
-            MPI_Finalize();
-            exit(EXIT_FAILURE);
-        }
         printf("Starting LBM with MPI using %d ranks...\n", number_of_ranks);
     }
-    /* TODO: Broadcast values that were read from file to other processes*/
     broadcastInitialValues(&xlength, &tau, velocityWall, &iproc, &jproc, &kproc, &timesteps);
+    /* TODO: Add checks for ijk==ranks and xlength%ijk != 0 */
+    if (iproc * jproc * kproc != number_of_ranks) {
+        if (rank == 0) {
+            printf("iproc*jproc*kproc != number of ranks! Aborting program!\n");
+            fflush(stdout);
+        }
+        MPI_Finalize();
+        exit(EXIT_FAILURE);
+    }
+    /* TODO: Broadcast values that were read from file to other processes*/
 
-    /* TODO: MPI version */
     /* Compute cuboid lengths for subdomains which are handed over to the processes */
-    const int sublength[3] = { xlength / iproc + 2, xlength / jproc + 2, xlength / kproc + 2 };
+#if 0
+    printf("Values of proc #%d: xlength=%d, ijkproc=(%d, %d, %d), timesteps=%d\n",
+            rank, xlength, iproc, jproc, kproc, timesteps);
+#endif
+    const int sublength[3] = { xlength / iproc, xlength / jproc, xlength / kproc };
+    /*const int sublength[3] = { xlength / iproc + 2, xlength / jproc + 2, xlength / kproc + 2 };*/
     /* Subdomain volume including ghost layer */
     const int volume_ghost = (sublength[0] + 2) * (sublength[1] + 2) * (sublength[2] + 2);
     collideField = malloc(sizeof(*collideField) * Q * volume_ghost);
     streamField = malloc(sizeof(*streamField) * Q * volume_ghost);
     flagField = malloc(sizeof(*flagField) * volume_ghost);
 #if 0
-    printf("Sublength = (%d,%d,%d)\n", sublength[0], sublength[1], sublength[2]);
+    printf("Sublength = (%d,%d,%d), process %d\n", sublength[0], sublength[1], sublength[2], rank);
 #endif
     /* Initialize pointers */
     initialiseFields(collideField, streamField, flagField, xlength, sublength, rank,
             number_of_ranks);
 
-    double *swap = NULL;
+    /*MPI_Barrier(MPI_COMM_WORLD);*/
     for (int t = 0; t < timesteps; ++t) {
-        /* TODO: Extraction, Swap, Injection
+        /* TODO: Extraction, Swap, Injection: Check if the right PDF field (collideField) was chosen
          * 1. Extraction step: Extract relevant pdfs to be sent. One buffer for all sides
          * => Buffer size = 5(c_i's) * 6(lattice planes) = 30 pdfs for each send/recv
          * 2. Swap step: Send and receive pdfs. Send from i to j must be followed by recv in i from j.
@@ -91,27 +98,35 @@ int main(int argc, char *argv[])
          *    2. Recv j->i
          * 3. Injection step: Write received pdfs into the corresponding boundary layers
          */
-        memset(sendBuffer, 0, 6 * sizeof(*sendBuffer));
-        memset(readBuffer, 0, 6 * sizeof(*readBuffer));
+#if 0
+        printf("Rank #%d of %d before exchanging\n", rank, number_of_ranks);
+        fflush(stdout);
+#endif
+        exchangePdfs(sendBuffer, readBuffer, collideField, sublength, rank, iproc, jproc, kproc);
 
         doStreaming(collideField, streamField, flagField, sublength);
+
+        double *swap = NULL;
         swap = collideField;
         collideField = streamField;
         streamField = swap;
 
         doCollision(collideField, flagField, &tau, sublength);
         treatBoundary(collideField, flagField, velocityWall, sublength);
-
+#if 1
         /* Write output to vtk file for postprocessing */
-
-        if (rank == 0 && t % timestepsPerPlotting == 0) {
-            printf("%d %%\r", (int) ((double) t / timesteps * 100));
-            fflush(stdout);
-            writeVtkOutput(collideField, flagField, "lbm_out", t, sublength);
+/*        if (t % timestepsPerPlotting == 0) {*/
+        if (t % 10 == 0) {
+            if (rank == 0) {
+                printf("%d %%\r", (int) ((double) t / timesteps * 100));
+                fflush(stdout);
+            }
+            writeVtkOutput(collideField, flagField, "lbm_out", rank, iproc, jproc, kproc, t,
+                    sublength);
         }
-
+#endif
         /* TODO: Wait for all processes to finish before starting with new loop */
-        MPI_Barrier(MPI_COMM_WORLD);
+        /*MPI_Barrier(MPI_COMM_WORLD);*/
     }
 
     if (rank == 0) {

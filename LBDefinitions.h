@@ -25,6 +25,37 @@ typedef enum
     FLUID = 0, NO_SLIP = 1, MOVING_WALL = 2, PARALLEL_BOUNDARY
 } STATE;
 
+#if 1 /* Maybe remove this later on */
+typedef enum
+{
+    NONE    = 0,
+    LEFT    = 1 << 0,
+    RIGHT   = 1 << 1,
+    TOP     = 1 << 2,
+    BOTTOM  = 1 << 3,
+    FRONT   = 1 << 4,
+    BACK    = 1 << 5
+} BOUNDARY;
+
+static inline int checkBoundary(int rank, int iproc, int jproc, int kproc)
+{
+    int result = NONE;
+    if (rank / (iproc * jproc) == 0)
+        result |= BOTTOM;
+    if (rank / (iproc * jproc) == kproc-1)
+        result |= TOP;
+    if ((rank / iproc) % jproc == 0)
+        result |= FRONT;
+    if ((rank / iproc) % jproc == jproc-1)
+        result |= BACK;
+    if (rank % iproc == 0)
+        result |= LEFT;
+    if (rank % iproc == iproc-1)
+        result |= RIGHT;
+    return result;
+}
+#endif
+
 /*
  * Cell index
  */

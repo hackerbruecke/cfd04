@@ -15,18 +15,16 @@ void computePostCollisionDistributions(double *currentCell, const double * const
 void doCollision(double *collideField, int *flagField, const double * const tau,
         const int * const sublength)
 {
-    double density;
-    double velocity[D];
-    double feq[Q];
-    double *currentCell;
-
     for (int z = 1; z < sublength[0] + 1; ++z) {
         for (int y = 1; y < sublength[1] + 1; ++y) {
             for (int x = 1; x < sublength[2] + 1; ++x) {
-                currentCell = &collideField[idx(sublength, x, y, z, 0)];
+                double *currentCell = &collideField[idx(sublength, x, y, z, 0)];
                 /*Updating values for velocity, density and Feq for Current cell*/
+                double density;
                 computeDensity(currentCell, &density);
+                double velocity[D];
                 computeVelocity(currentCell, &density, velocity);
+                double feq[Q];
                 computeFeq(&density, velocity, feq);
                 computePostCollisionDistributions(currentCell, tau, feq);
             }
