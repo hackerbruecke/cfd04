@@ -5,7 +5,7 @@ SOURCES=initLB.c visualLB.c boundary.c collision.c streaming.c computeCellValues
 # --------
 CC=mpicc
 
-CFLAGS=-Werror -pedantic -Wall -std=c99 -O3
+CFLAGS=-Werror -pedantic -Wall -std=c99 -O0 -g
 
 # Linker flags
 # ------------
