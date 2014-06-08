@@ -15,11 +15,11 @@ int readParameters(int *xlength, /* reads domain size. Parameter name: "xlength"
 /* Broadcasts the values of the parameter list from rank 0 to MPI_COMM_WORLD.
  * Use this function after reading in parameters from rank 0 */
 void broadcastInitialValues(int *xlength, double *tau, double *velocityWall, int *iproc, int *jproc,
-        int *kproc, int *timesteps);
+        int *kproc, int *timesteps, int *timestepsPerPlotting);
 
 /* initialises the particle distribution functions and the flagfield */
-void initialiseFields(double *collideField, double *streamField, int *flagField, int xlength,
-        const int * const sublength, int rank, int number_of_ranks);
+void initialiseFields(double *collideField, double *streamField, int *flagField,
+        const int * const sublength, int rank, int iproc, int jproc, int kproc);
 
 #endif
 

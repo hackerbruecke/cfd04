@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
     /* Subdivision of each domain dimension */
     int iproc, jproc, kproc;
     /* Send and receive buffer for exchanging PDFs among processes */
-    double sendBuffer[6];
-    double readBuffer[6];
+    double *sendBuffer[6];
+    double *readBuffer[6];
 
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
@@ -57,7 +57,8 @@ int main(int argc, char *argv[])
         printf("...done\n");
         printf("Starting LBM with MPI using %d ranks...\n", number_of_ranks);
     }
-    broadcastInitialValues(&xlength, &tau, velocityWall, &iproc, &jproc, &kproc, &timesteps);
+    broadcastInitialValues(&xlength, &tau, velocityWall, &iproc, &jproc, &kproc, &timesteps,
+            &timestepsPerPlotting);
     /* TODO: Add checks for ijk==ranks and xlength%ijk != 0 */
     if (iproc * jproc * kproc != number_of_ranks) {
         if (rank == 0) {
@@ -74,6 +75,7 @@ int main(int argc, char *argv[])
     printf("Values of proc #%d: xlength=%d, ijkproc=(%d, %d, %d), timesteps=%d\n",
             rank, xlength, iproc, jproc, kproc, timesteps);
 #endif
+    /* Length of subdomains (NOT including ghost cells) */
     const int sublength[3] = { xlength / iproc, xlength / jproc, xlength / kproc };
     /*const int sublength[3] = { xlength / iproc + 2, xlength / jproc + 2, xlength / kproc + 2 };*/
     /* Subdomain volume including ghost layer */
@@ -85,8 +87,25 @@ int main(int argc, char *argv[])
     printf("Sublength = (%d,%d,%d), process %d\n", sublength[0], sublength[1], sublength[2], rank);
 #endif
     /* Initialize pointers */
-    initialiseFields(collideField, streamField, flagField, xlength, sublength, rank,
-            number_of_ranks);
+    initialiseFields(collideField, streamField, flagField, sublength, rank, iproc, jproc, kproc);
+
+    const int xl = sublength[0];
+    const int yl = sublength[1];
+    const int zl = sublength[2];
+    /* Send buffers */
+    sendBuffer[0] = malloc(5 * sizeof(double) * (yl+2)*(zl+2));
+    sendBuffer[1] = malloc(5 * sizeof(double) * (yl+2)*(zl+2));
+    sendBuffer[2] = malloc(5 * sizeof(double) * (xl+2)*(yl+2));
+    sendBuffer[3] = malloc(5 * sizeof(double) * (xl+2)*(yl+2));
+    sendBuffer[4] = malloc(5 * sizeof(double) * (xl+2)*(zl+2));
+    sendBuffer[5] = malloc(5 * sizeof(double) * (xl+2)*(zl+2));
+    /* Read buffers */
+    readBuffer[0] = malloc(5 * sizeof(double) * (yl+2)*(zl+2));
+    readBuffer[1] = malloc(5 * sizeof(double) * (yl+2)*(zl+2));
+    readBuffer[2] = malloc(5 * sizeof(double) * (xl+2)*(yl+2));
+    readBuffer[3] = malloc(5 * sizeof(double) * (xl+2)*(yl+2));
+    readBuffer[4] = malloc(5 * sizeof(double) * (xl+2)*(zl+2));
+    readBuffer[5] = malloc(5 * sizeof(double) * (xl+2)*(zl+2));
 
     /*MPI_Barrier(MPI_COMM_WORLD);*/
     for (int t = 0; t < timesteps; ++t) {
@@ -115,8 +134,7 @@ int main(int argc, char *argv[])
         treatBoundary(collideField, flagField, velocityWall, sublength);
 #if 1
         /* Write output to vtk file for postprocessing */
-/*        if (t % timestepsPerPlotting == 0) {*/
-        if (t % 10 == 0) {
+        if (t % timestepsPerPlotting == 0) {
             if (rank == 0) {
                 printf("%d %%\r", (int) ((double) t / timesteps * 100));
                 fflush(stdout);
@@ -137,6 +155,10 @@ int main(int argc, char *argv[])
     free(collideField);
     free(streamField);
     free(flagField);
+    for (int i = 0; i < 6; ++i) {
+        free(sendBuffer[i]);
+        free(readBuffer[i]);
+    }
     MPI_Finalize();
     return 0;
 }

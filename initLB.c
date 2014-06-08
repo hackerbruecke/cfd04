@@ -28,7 +28,7 @@ int readParameters(int *xlength, double *tau, double *velocityWall, int *iproc, 
 }
 
 void broadcastInitialValues(int *xlength, double *tau, double *velocityWall, int *iproc, int *jproc,
-        int *kproc, int *timesteps)
+        int *kproc, int *timesteps, int *timestepsPerPlotting)
 {
     MPI_Bcast(xlength, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(tau, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -38,73 +38,86 @@ void broadcastInitialValues(int *xlength, double *tau, double *velocityWall, int
     MPI_Bcast(jproc, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(kproc, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(timesteps, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(timestepsPerPlotting, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-void initialiseFields(double *collideField, double *streamField, int *flagField, int xlength,
-        const int * const sublength, int rank, int number_of_ranks)
+void initialiseFields(double *collideField, double *streamField, int *flagField,
+        const int * const sublength, int rank, int iproc, int jproc, int kproc)
 {
     /* TODO: Change the memory allocation according to the lattice sizes for each MPI process */
     const int xl = sublength[0];
     const int yl = sublength[1];
     const int zl = sublength[2];
+    /* Minor value and major value to set for a plane (i.e. FRONT and BACK or BOTTOM and TOP) */
+    STATE minor, major;
 
     /* Set all values of flagField to 0, i.e. FLUID state. We will apply boundary conditions
      in the following */
     memset(flagField, FLUID, (xl + 2) * (yl + 2) * (zl + 2) * sizeof(*flagField));
 
     /* TODO: Check if this is working correctly and improve performance */
-    /* The values for Boundary on Z = 0 are set to No_Slip, whereas Z=Zmax is set to MOVING_WALL */
+
+    /* XY plane */
+    if (checkBoundary(rank, iproc, jproc, kproc) & BOTTOM) {
+        /* Subdomains in bottom part of domain */
+        minor = NO_SLIP;
+        major = PARALLEL_BOUNDARY;
+    }
+    else if (checkBoundary(rank, iproc, jproc, kproc) & TOP) {
+        /* Subdomains in upper part of domain - Top is the moving wall, bottom is a no-slip boundary */
+        minor = PARALLEL_BOUNDARY;
+        major = MOVING_WALL;
+    }
+    else {
+        /* Inner cells have parallel boundaries */
+        minor = PARALLEL_BOUNDARY;
+        major = PARALLEL_BOUNDARY;
+    }
     for (int x = 0; x < xl + 2; ++x) {
         for (int y = 0; y < yl + 2; ++y) {
-            /* Subdomains in bottom part of domain */
-            if (rank / (xlength * xlength) == 0) {
-                flagField[fidx(sublength, x, y, 0)] = NO_SLIP;
-                flagField[fidx(sublength, x, y, zl + 1)] = PARALLEL_BOUNDARY;
-            }
-            else if (rank / (xlength * xlength) == xlength - 1) {
-                /* Subdomains in upper part of domain - Top is the moving wall, bottom is a no-slip boundary */
-                flagField[fidx(sublength, x, y, 0)] = PARALLEL_BOUNDARY;
-                flagField[fidx(sublength, x, y, zl + 1)] = MOVING_WALL;
-            }
-            else { /* Inner cells have parallel boundaries */
-                flagField[fidx(sublength, x, y, 0)] = PARALLEL_BOUNDARY;
-                flagField[fidx(sublength, x, y, zl + 1)] = PARALLEL_BOUNDARY;
-            }
+            flagField[fidx(sublength, x, y, 0)] = minor;
+            flagField[fidx(sublength, x, y, zl + 1)] = major;
         }
     }
 
-    /* The values for Boundary on Y = 0 and Ymax plane set to No_Slip */
+    /* XZ plane */
+    if (checkBoundary(rank, iproc, jproc, kproc) & FRONT) {
+        minor = NO_SLIP;
+        major = PARALLEL_BOUNDARY;
+    }
+    else if (checkBoundary(rank, iproc, jproc, kproc) & BACK) {
+        minor = PARALLEL_BOUNDARY;
+        major = NO_SLIP;
+    }
+    else {
+        minor = PARALLEL_BOUNDARY;
+        major = PARALLEL_BOUNDARY;
+    }
     for (int x = 0; x < xl + 2; ++x) {
         for (int z = 0; z < zl + 2; ++z) {
-            if ((rank / xlength) % xlength == 0) {
-                flagField[fidx(sublength, x, 0, z)] = NO_SLIP;
-                flagField[fidx(sublength, x, yl + 1, z)] = PARALLEL_BOUNDARY;
-            }
-            else if ((rank / xlength) % xlength == xlength - 1) {
-                flagField[fidx(sublength, x, 0, z)] = PARALLEL_BOUNDARY;
-                flagField[fidx(sublength, x, yl + 1, z)] = NO_SLIP;
-            }
-            else {
-                flagField[fidx(sublength, x, 0, z)] = PARALLEL_BOUNDARY;
-                flagField[fidx(sublength, x, yl + 1, z)] = PARALLEL_BOUNDARY;
-            }
+            flagField[fidx(sublength, x, 0, z)] = minor;
+            flagField[fidx(sublength, x, yl + 1, z)] = major;
         }
+    }
+
+    /* YZ plane */
+    if (checkBoundary(rank, iproc, jproc, kproc) & LEFT) {
+        minor = NO_SLIP;
+        major = PARALLEL_BOUNDARY;
+    }
+    else if (checkBoundary(rank, iproc, jproc, kproc) & RIGHT) {
+        minor = PARALLEL_BOUNDARY;
+        major = NO_SLIP;
+    }
+    else {
+        minor = PARALLEL_BOUNDARY;
+        major = PARALLEL_BOUNDARY;
     }
     /* The values for Boundary on Y = 0 and Ymax plane set to No_Slip */
     for (int y = 0; y < yl + 2; ++y) {
         for (int z = 0; z < zl + 2; ++z) {
-            if (rank % xlength == 0) {
-                flagField[fidx(sublength, 0, y, z)] = NO_SLIP;
-                flagField[fidx(sublength, xl + 1, y, z)] = PARALLEL_BOUNDARY;
-            }
-            else if (rank % xlength == xlength - 1) {
-                flagField[fidx(sublength, 0, y, z)] = PARALLEL_BOUNDARY;
-                flagField[fidx(sublength, xl + 1, y, z)] = NO_SLIP;
-            }
-            else {
-                flagField[fidx(sublength, 0, y, z)] = PARALLEL_BOUNDARY;
-                flagField[fidx(sublength, xl + 1, y, z)] = PARALLEL_BOUNDARY;
-            }
+            flagField[fidx(sublength, 0, y, z)] = minor;
+            flagField[fidx(sublength, xl + 1, y, z)] = major;
         }
     }
 
