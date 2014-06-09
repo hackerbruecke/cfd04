@@ -59,11 +59,13 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
 
     /* XY plane */
     if (checkBoundary(rank, iproc, jproc, kproc) & BOTTOM) {
+        printf("Rank #%d - BOTTOM\n", rank);
         /* Subdomains in bottom part of domain */
         minor = NO_SLIP;
         major = PARALLEL_BOUNDARY;
     }
-    else if (checkBoundary(rank, iproc, jproc, kproc) & TOP) {
+    if (checkBoundary(rank, iproc, jproc, kproc) & TOP) {
+        printf("Rank #%d - TOP\n", rank);
         /* Subdomains in upper part of domain - Top is the moving wall, bottom is a no-slip boundary */
         minor = PARALLEL_BOUNDARY;
         major = MOVING_WALL;
@@ -82,10 +84,12 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
 
     /* XZ plane */
     if (checkBoundary(rank, iproc, jproc, kproc) & FRONT) {
+        printf("Rank #%d - FRONT\n", rank);
         minor = NO_SLIP;
         major = PARALLEL_BOUNDARY;
     }
     else if (checkBoundary(rank, iproc, jproc, kproc) & BACK) {
+        printf("Rank #%d - BACK\n", rank);
         minor = PARALLEL_BOUNDARY;
         major = NO_SLIP;
     }
@@ -102,10 +106,12 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
 
     /* YZ plane */
     if (checkBoundary(rank, iproc, jproc, kproc) & LEFT) {
+        printf("Rank #%d - LEFT\n", rank);
         minor = NO_SLIP;
         major = PARALLEL_BOUNDARY;
     }
     else if (checkBoundary(rank, iproc, jproc, kproc) & RIGHT) {
+        printf("Rank #%d - RIGHT\n", rank);
         minor = PARALLEL_BOUNDARY;
         major = NO_SLIP;
     }

@@ -1,5 +1,5 @@
 tau=.5882
-vwallx=.1
+vwallx=.05
 vwally=0
 vwallz=0
 iproc=2
@@ -7,4 +7,4 @@ jproc=2
 kproc=2
 timesteps=100
 timestepsPerPlotting=10
-xlength=8
+xlength=12
