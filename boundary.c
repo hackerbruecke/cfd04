@@ -72,7 +72,7 @@ void treatBoundary(double *collideField, int* flagField, const double * const wa
 
         for (int x = 0; x < xmax+1; ++x) {
             for (int z = 0; z < zmax+1; ++z) {
-                if (flagField[fidx(sublength, x, 0, z)] == NO_SLIP)
+                if (flagField[fidx(sublength, x, 0, z)] == NO_SLIP) 
                     computeNoSlipCondition(sublength, x, 0, z, i, dx, dy, dz, collideField, flagField);
                 if (flagField[fidx(sublength, x, ymax, z)] == NO_SLIP)
                     computeNoSlipCondition(sublength, x, ymax, z, i, dx, dy, dz,
