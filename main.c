@@ -135,12 +135,13 @@ int main(int argc, char *argv[])
 #if 1
         /* Write output to vtk file for postprocessing */
         if (t % timestepsPerPlotting == 0) {
+            writeVtkOutput(collideField, flagField, "lbm_out", rank, iproc, jproc, kproc, t,
+                    sublength);
             if (rank == 0) {
                 printf("%d %%\r", (int) ((double) t / timesteps * 100));
                 fflush(stdout);
+                writeParallelVtkFile("lbm_out", iproc, jproc, kproc, sublength, t);
             }
-            writeVtkOutput(collideField, flagField, "lbm_out", rank, iproc, jproc, kproc, t,
-                    sublength);
         }
 #endif
         /* TODO: Wait for all processes to finish before starting with new loop */

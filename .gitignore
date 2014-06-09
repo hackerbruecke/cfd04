@@ -4,4 +4,6 @@
 *.o
 lbsim
 *.vtk
+*.vts
+*.pvts
 gmon.out

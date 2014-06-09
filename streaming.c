@@ -137,7 +137,6 @@ void exchangePdfs(double **sendBuffer, double **readBuffer, double *collideField
                 sendBuffer[4][i++] = collideField[idx(sublength, x, 0, z, 6)];
                 sendBuffer[4][i++] = collideField[idx(sublength, x, 0, z, 7)];
                 sendBuffer[4][i++] = collideField[idx(sublength, x, 0, z, 14)];
-
             }
         }
         /* Send PDFs to front neighbor. Since we are ignoring frontmost

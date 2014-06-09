@@ -74,11 +74,12 @@ static inline int fidx(const int * const sublength, int x, int y, int z)
 /*
  * Subdomain index. Returns the rank corresponding to the x,y,z coordinates of a subdomain element
  */
+/*
 static inline int sidx(const int * const xlength, int x, int y, int z)
 {
     return x + xlength[0] * y + xlength[0] * xlength[1] * z;
 }
-
+*/
 /*
  * Inverse index
  */
