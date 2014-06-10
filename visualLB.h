@@ -1,7 +1,7 @@
 #ifndef _VISUALLB_H_
 #define _VISUALLB_H_
 
-void writeParallelVtkFile(const char * const filename, int iproc, int jproc, int kproc,
+void writeParallelVtkFile(const char * const filename, int xlength, int iproc, int jproc, int kproc,
         const int * const sublength, unsigned int t);
 
 /** writes the density and velocity field (derived from the distributions in collideField)
@@ -10,7 +10,7 @@ void writeParallelVtkFile(const char * const filename, int iproc, int jproc, int
  */
 void writeVtkOutput(const double * const collideField, const int * const flagField,
         const char * filename, int rank, int iproc, int jproc, int kproc, unsigned int t,
-        const int * const xlength);
+        const int * const sublength);
 
 #endif
 

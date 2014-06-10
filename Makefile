@@ -20,7 +20,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS) 
 
 clean:
-	rm -f $(OBJECTS) $(EXECUTABLE) *.vtk *.pvts
+	rm -f $(OBJECTS) $(EXECUTABLE) *.vts *.pvts
 
 
 $(OBJECTS): %.o : %.c

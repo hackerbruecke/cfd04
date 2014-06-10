@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
             if (rank == 0) {
                 printf("%d %%\r", (int) ((double) t / timesteps * 100));
                 fflush(stdout);
-                writeParallelVtkFile("lbm_out", iproc, jproc, kproc, sublength, t);
+                writeParallelVtkFile("lbm_out", xlength, iproc, jproc, kproc, sublength, t);
             }
         }
     }

@@ -7,4 +7,4 @@ jproc=2
 kproc=2
 timesteps=100
 timestepsPerPlotting=2
-xlength=12
+xlength=16
