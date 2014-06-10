@@ -41,13 +41,47 @@ void broadcastInitialValues(int *xlength, double *tau, double *velocityWall, int
     MPI_Bcast(timestepsPerPlotting, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-void initialiseFields(double *collideField, double *streamField, int *flagField,
-        const int * const sublength, int rank, int iproc, int jproc, int kproc)
+void allocateBufferSpace(double **sendBuffer, double **readBuffer, const int * const sublength)
 {
-    /* TODO: Change the memory allocation according to the lattice sizes for each MPI process */
     const int xl = sublength[0];
     const int yl = sublength[1];
     const int zl = sublength[2];
+    /* We allocate space for 5 PDFs in every plane direction times the size of the plane */
+    /* Send buffers */
+    sendBuffer[0] = malloc(5 * sizeof(double) * (yl + 2) * (zl + 2));
+    sendBuffer[1] = malloc(5 * sizeof(double) * (yl + 2) * (zl + 2));
+    sendBuffer[2] = malloc(5 * sizeof(double) * (xl + 2) * (yl + 2));
+    sendBuffer[3] = malloc(5 * sizeof(double) * (xl + 2) * (yl + 2));
+    sendBuffer[4] = malloc(5 * sizeof(double) * (xl + 2) * (zl + 2));
+    sendBuffer[5] = malloc(5 * sizeof(double) * (xl + 2) * (zl + 2));
+    /* Read buffers */
+    readBuffer[0] = malloc(5 * sizeof(double) * (yl + 2) * (zl + 2));
+    readBuffer[1] = malloc(5 * sizeof(double) * (yl + 2) * (zl + 2));
+    readBuffer[2] = malloc(5 * sizeof(double) * (xl + 2) * (yl + 2));
+    readBuffer[3] = malloc(5 * sizeof(double) * (xl + 2) * (yl + 2));
+    readBuffer[4] = malloc(5 * sizeof(double) * (xl + 2) * (zl + 2));
+    readBuffer[5] = malloc(5 * sizeof(double) * (xl + 2) * (zl + 2));
+}
+
+void cleanup(double *collideField, double *streamField, int *flagField, double **sendBuffer,
+        double **readBuffer)
+{
+    free(collideField);
+    free(streamField);
+    free(flagField);
+    for (int i = 0; i < 6; ++i) {
+        free(sendBuffer[i]);
+        free(readBuffer[i]);
+    }
+}
+
+void initialiseFields(double *collideField, double *streamField, int *flagField,
+        const int * const sublength, int rank, int iproc, int jproc, int kproc)
+{
+    const int xl = sublength[0];
+    const int yl = sublength[1];
+    const int zl = sublength[2];
+
     /* Minor value and major value to set for a plane (i.e. FRONT and BACK or BOTTOM and TOP) */
     STATE minor, major;
 
@@ -55,18 +89,13 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
      in the following */
     memset(flagField, FLUID, (xl + 2) * (yl + 2) * (zl + 2) * sizeof(*flagField));
 
-    /* TODO: Check if this is working correctly and improve performance */
-
     /* XY plane */
     if (checkBoundary(rank, iproc, jproc, kproc) & BOTTOM) {
-        //printf("Rank #%d - BOTTOM\n", rank);
         /* Subdomains in bottom part of domain */
         minor = NO_SLIP;
         major = PARALLEL_BOUNDARY;
     }
     if (checkBoundary(rank, iproc, jproc, kproc) & TOP) {
-        //printf("Rank #%d - TOP\n", rank);
-        /* Subdomains in upper part of domain - Top is the moving wall, bottom is a no-slip boundary */
         minor = PARALLEL_BOUNDARY;
         major = MOVING_WALL;
     }
@@ -75,8 +104,8 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
         minor = PARALLEL_BOUNDARY;
         major = PARALLEL_BOUNDARY;
     }
-    for (int x = 0; x < xl + 2; ++x) {
-        for (int y = 0; y < yl + 2; ++y) {
+    for (int y = 0; y < yl + 2; ++y) {
+        for (int x = 0; x < xl + 2; ++x) {
             flagField[fidx(sublength, x, y, 0)] = minor;
             flagField[fidx(sublength, x, y, zl + 1)] = major;
         }
@@ -84,12 +113,10 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
 
     /* XZ plane */
     if (checkBoundary(rank, iproc, jproc, kproc) & FRONT) {
-        //printf("Rank #%d - FRONT\n", rank);
         minor = NO_SLIP;
         major = PARALLEL_BOUNDARY;
     }
     else if (checkBoundary(rank, iproc, jproc, kproc) & BACK) {
-        //printf("Rank #%d - BACK\n", rank);
         minor = PARALLEL_BOUNDARY;
         major = NO_SLIP;
     }
@@ -97,8 +124,8 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
         minor = PARALLEL_BOUNDARY;
         major = PARALLEL_BOUNDARY;
     }
-    for (int x = 0; x < xl + 2; ++x) {
-        for (int z = 0; z < zl + 2; ++z) {
+    for (int z = 0; z < zl + 2; ++z) {
+        for (int x = 0; x < xl + 2; ++x) {
             flagField[fidx(sublength, x, 0, z)] = minor;
             flagField[fidx(sublength, x, yl + 1, z)] = major;
         }
@@ -106,12 +133,10 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
 
     /* YZ plane */
     if (checkBoundary(rank, iproc, jproc, kproc) & LEFT) {
-        //printf("Rank #%d - LEFT\n", rank);
         minor = NO_SLIP;
         major = PARALLEL_BOUNDARY;
     }
     else if (checkBoundary(rank, iproc, jproc, kproc) & RIGHT) {
-        //printf("Rank #%d - RIGHT\n", rank);
         minor = PARALLEL_BOUNDARY;
         major = NO_SLIP;
     }
@@ -119,21 +144,22 @@ void initialiseFields(double *collideField, double *streamField, int *flagField,
         minor = PARALLEL_BOUNDARY;
         major = PARALLEL_BOUNDARY;
     }
-    /* The values for Boundary on Y = 0 and Ymax plane set to No_Slip */
-    for (int y = 0; y < yl + 2; ++y) {
-        for (int z = 0; z < zl + 2; ++z) {
+    for (int z = 0; z < zl + 2; ++z) {
+        for (int y = 0; y < yl + 2; ++y) {
             flagField[fidx(sublength, 0, y, z)] = minor;
             flagField[fidx(sublength, xl + 1, y, z)] = major;
         }
     }
 
     /* Stream and Collide Fields are initialized to the respective lattice weights of the Cell */
-    for (int x = 0; x < xl + 2; ++x) {
+    int index = 0;
+    for (int z = 0; z < zl + 2; ++z) {
         for (int y = 0; y < yl + 2; ++y) {
-            for (int z = 0; z < zl + 2; ++z) {
+            for (int x = 0; x < xl + 2; ++x) {
                 for (int i = 0; i < Q; ++i) {
-                    collideField[idx(sublength, x, y, z, i)] = LATTICEWEIGHTS[i];
-                    streamField[idx(sublength, x, y, z, i)] = LATTICEWEIGHTS[i];
+                    collideField[index] = LATTICEWEIGHTS[i];
+                    streamField[index] = LATTICEWEIGHTS[i];
+                    ++index;
                 }
             }
         }

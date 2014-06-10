@@ -17,6 +17,13 @@ int readParameters(int *xlength, /* reads domain size. Parameter name: "xlength"
 void broadcastInitialValues(int *xlength, double *tau, double *velocityWall, int *iproc, int *jproc,
         int *kproc, int *timesteps, int *timestepsPerPlotting);
 
+/* Allocates space for the send and receive buffer which will handle MPI exchange data */
+void allocateBufferSpace(double **sendBuffer, double **readBuffer, const int * const sublength);
+
+/* Cleanup function for heap-allocated memory */
+void cleanup(double *collideField, double *streamField, int *flagField, double **sendBuffer,
+        double **readBuffer);
+
 /* initialises the particle distribution functions and the flagfield */
 void initialiseFields(double *collideField, double *streamField, int *flagField,
         const int * const sublength, int rank, int iproc, int jproc, int kproc);

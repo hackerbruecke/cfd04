@@ -1,14 +1,15 @@
-#if 1
 #include <mpi.h>
-#include <stdio.h>
 
 #include "streaming.h"
 #include "LBDefinitions.h"
 
-enum
+/* Helper enum to identify neighbor direction. Note: Do not replace with RIGHT, LEFT etc.
+ * as the latter enums contain powers of two instead of subsequent numbers
+ */
+typedef enum
 {
     LE, RI, TO, BO, FR, BA
-};
+} DIRECTION;
 
 void doRightSendRecv(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank)
@@ -17,7 +18,6 @@ void doRightSendRecv(double **sendBuffer, double **readBuffer, double *collideFi
     const int xl = sublength[0];
     const int yl = sublength[1];
     const int zl = sublength[2];
-    //printf("#%d has right neighbor\n", rank);
     int i = 0;
     /* Collect PDFs to send */
     for (int y = 0; y < yl + 2; ++y) {
@@ -56,7 +56,6 @@ void doRightSendRecv(double **sendBuffer, double **readBuffer, double *collideFi
 void doLeftSendRecv(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank)
 {
-    //printf("#%d has left neighbor\n", rank);
     MPI_Status status;
     const int yl = sublength[1];
     const int zl = sublength[2];
@@ -94,7 +93,6 @@ void doLeftSendRecv(double **sendBuffer, double **readBuffer, double *collideFie
 void doBackSendRecv(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank, int iproc)
 {
-    //printf("#%d has back neighbor\n", rank);
     MPI_Status status;
     const int xl = sublength[0];
     const int yl = sublength[1];
@@ -134,7 +132,6 @@ void doBackSendRecv(double **sendBuffer, double **readBuffer, double *collideFie
 void doFrontSendRecv(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank, int iproc)
 {
-    //printf("#%d has front neighbor\n", rank);
     MPI_Status status;
     const int xl = sublength[0];
     const int zl = sublength[2];
@@ -174,7 +171,6 @@ void doFrontSendRecv(double **sendBuffer, double **readBuffer, double *collideFi
 void doBottomSendRecv(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank, int iproc, int jproc)
 {
-    //printf("#%d has bottom neighbor\n", rank);
     MPI_Status status;
     const int xl = sublength[0];
     const int yl = sublength[1];
@@ -215,7 +211,6 @@ void doBottomSendRecv(double **sendBuffer, double **readBuffer, double *collideF
 void doTopSendRecv(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank, int iproc, int jproc)
 {
-    //printf("#%d has top neighbor\n", rank);
     MPI_Status status;
     const int xl = sublength[0];
     const int yl = sublength[1];
@@ -332,4 +327,4 @@ void doStreaming(double *collideField, double *streamField, int *flagField,
     }
 
 }
-#endif
+

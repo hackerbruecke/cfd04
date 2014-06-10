@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "boundary.h"
 #include "LBDefinitions.h"
 #include "computeCellValues.h"
@@ -48,9 +47,9 @@ static inline void computeMovingWallCondition(const int * const sublength, int x
 void treatBoundary(double *collideField, int* flagField, const double * const wallVelocity,
         const int * const sublength)
 {
-    const int xmax = sublength[0]+1;
-    const int ymax = sublength[1]+1;
-    const int zmax = sublength[2]+1;
+    const int xmax = sublength[0] + 1;
+    const int ymax = sublength[1] + 1;
+    const int zmax = sublength[2] + 1;
     /*Going through the whole boundary domain*/
 
     /*For each boundary cell/particle we update all the distribution functions,
@@ -60,33 +59,36 @@ void treatBoundary(double *collideField, int* flagField, const double * const wa
         int dx = LATTICEVELOCITIES[i][0];
         int dy = LATTICEVELOCITIES[i][1];
         int dz = LATTICEVELOCITIES[i][2];
-        for (int x = 0; x < xmax+1; ++x) {
-            for (int y = 0; y < ymax+1; ++y) {
+        for (int x = 0; x < xmax + 1; ++x) {
+            for (int y = 0; y < ymax + 1; ++y) {
                 if (flagField[fidx(sublength, x, y, 0)] == NO_SLIP)
-                    computeNoSlipCondition(sublength, x, y, 0, i, dx, dy, dz, collideField, flagField);
+                    computeNoSlipCondition(sublength, x, y, 0, i, dx, dy, dz, collideField,
+                            flagField);
                 if (flagField[fidx(sublength, x, y, zmax)] == MOVING_WALL)
-                    computeMovingWallCondition(sublength, x, y, zmax, i, dx, dy, dz,
-                            collideField, flagField, wallVelocity);
+                    computeMovingWallCondition(sublength, x, y, zmax, i, dx, dy, dz, collideField,
+                            flagField, wallVelocity);
             }
         }
 
-        for (int x = 0; x < xmax+1; ++x) {
-            for (int z = 0; z < zmax+1; ++z) {
-                if (flagField[fidx(sublength, x, 0, z)] == NO_SLIP) 
-                    computeNoSlipCondition(sublength, x, 0, z, i, dx, dy, dz, collideField, flagField);
+        for (int x = 0; x < xmax + 1; ++x) {
+            for (int z = 0; z < zmax + 1; ++z) {
+                if (flagField[fidx(sublength, x, 0, z)] == NO_SLIP)
+                    computeNoSlipCondition(sublength, x, 0, z, i, dx, dy, dz, collideField,
+                            flagField);
                 if (flagField[fidx(sublength, x, ymax, z)] == NO_SLIP)
-                    computeNoSlipCondition(sublength, x, ymax, z, i, dx, dy, dz,
-                            collideField, flagField);
+                    computeNoSlipCondition(sublength, x, ymax, z, i, dx, dy, dz, collideField,
+                            flagField);
             }
         }
 
-        for (int y = 0; y < ymax+1; ++y) {
-            for (int z = 0; z < zmax+1; ++z) {
+        for (int y = 0; y < ymax + 1; ++y) {
+            for (int z = 0; z < zmax + 1; ++z) {
                 if (flagField[fidx(sublength, 0, y, z)] == NO_SLIP)
-                    computeNoSlipCondition(sublength, 0, y, z, i, dx, dy, dz, collideField, flagField);
+                    computeNoSlipCondition(sublength, 0, y, z, i, dx, dy, dz, collideField,
+                            flagField);
                 if (flagField[fidx(sublength, xmax, y, z)] == NO_SLIP)
-                    computeNoSlipCondition(sublength, xmax, y, z, i, dx, dy, dz,
-                            collideField, flagField);
+                    computeNoSlipCondition(sublength, xmax, y, z, i, dx, dy, dz, collideField,
+                            flagField);
             }
         }
     }

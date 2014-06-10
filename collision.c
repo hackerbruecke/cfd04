@@ -1,7 +1,5 @@
 #include "collision.h"
 #include "LBDefinitions.h"
-#include <stdio.h>
-#include <math.h>
 
 void computePostCollisionDistributions(double *currentCell, const double * const tau,
         const double * const feq)

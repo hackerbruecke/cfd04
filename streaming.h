@@ -1,6 +1,9 @@
 #ifndef _STREAMING_H_
 #define _STREAMING_H_
 
+/**
+ * Exchanges PDFs with neighbors, according to the rank position
+ */
 void exchangePdfs(double **sendBuffer, double **readBuffer, double *collideField,
         const int * const sublength, int rank, int iproc, int jproc, int kproc);
 
